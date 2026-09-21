@@ -1,5 +1,7 @@
+-- Run after igdb_import.py has populated the games staging table.
+-- Select the database configured by DB_NAME before executing this script.
 
--- Setting up all the Schema's tables
+-- Setting up the normalized schema tables
 CREATE TABLE Developer (
     developerID INT PRIMARY KEY AUTO_INCREMENT,
     developerName VARCHAR(255) UNIQUE
@@ -56,7 +58,7 @@ CREATE TABLE Wishlist (
     wishlistID INT PRIMARY KEY AUTO_INCREMENT,
     userID INT,
     gameID INT,
-    dateAdded DATE,
+    dateAdded DATE DEFAULT (CAST(current_timestamp() AS date)),
     CONSTRAINT unique_user_game UNIQUE (userID, gameID),
     FOREIGN KEY (userID) REFERENCES User(userID),
     FOREIGN KEY (gameID) REFERENCES Game(gameID)
@@ -75,7 +77,8 @@ CREATE TABLE WishlistLog (
     logID INT AUTO_INCREMENT PRIMARY KEY,
     userID INT,
     gameID INT,
-    deletedAt DATETIME
+    changeType VARCHAR(255),
+    changedAt DATETIME
 );
 -- Filling the user table with users created by AI
 
@@ -181,15 +184,7 @@ INSERT INTO User (userName, email, birthday) VALUES
 ('caleb_r','caleb.r@email.com','1997-05-05'),
 ('miguel_g','miguel.g@email.com','2000-09-09');
 
--- Randomly Filling the wishlists of the users
-INSERT IGNORE INTO Wishlist (userID, gameID, dateAdded)
-SELECT 
-    u.userID,
-    g.gameID,
-    CURDATE() - INTERVAL FLOOR(RAND()*1000) DAY
-FROM User u
-JOIN Game g
-WHERE RAND() < 0.1;
+
 
 
 -- Inserting all the data from our idgb games data table into our schema
@@ -213,6 +208,15 @@ FROM games g
 JOIN Developer d 
     ON TRIM(SUBSTRING_INDEX(g.developers, ',', 1)) = d.developerName;
     
+-- Randomly Filling the wishlists of the users
+INSERT IGNORE INTO Wishlist (userID, gameID, dateAdded)
+SELECT 
+    u.userID,
+    g.gameID,
+    CURDATE() - INTERVAL FLOOR(RAND()*1000) DAY
+FROM User u
+JOIN Game g
+WHERE RAND() < 0.1;
 
 INSERT INTO Language (languageName)
 SELECT lang_name FROM (

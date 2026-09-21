@@ -6,7 +6,7 @@ FROM Game g
 JOIN Wishlist w ON g.gameID = w.gameID
 GROUP BY g.gameID, g.gameName
 ORDER BY timesWishlisted DESC
-LIMIT 20;
+LIMIT 10;
 
 -- Developer's Average Game Rating
 SELECT 
